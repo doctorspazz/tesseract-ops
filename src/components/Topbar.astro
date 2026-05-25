@@ -1,0 +1,36 @@
+---
+// src/components/Topbar.astro
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) =>
+  href === '/' ? path === '/' : path === href || path.startsWith(href + '/');
+
+const nav = [
+  { href: '/',        label: '~/posts'    },
+  { href: '/series',  label: '~/series'   },
+  { href: '/about',   label: '~/about'    },
+];
+---
+
+<header class="topbar">
+  <a href="/" class="wordmark">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <rect x="3.5"  y="3.5"  width="11" height="11" stroke="currentColor" stroke-width="1" />
+      <rect x="7.5"  y="7.5"  width="11" height="11" stroke="currentColor" stroke-width="1" />
+      <line x1="3.5"  y1="3.5"  x2="7.5"  y2="7.5"  stroke="currentColor" stroke-width="1" />
+      <line x1="14.5" y1="3.5"  x2="18.5" y2="7.5"  stroke="currentColor" stroke-width="1" />
+      <line x1="3.5"  y1="14.5" x2="7.5"  y2="18.5" stroke="currentColor" stroke-width="1" />
+      <line x1="14.5" y1="14.5" x2="18.5" y2="18.5" stroke="currentColor" stroke-width="1" />
+    </svg>
+    <span class="wordmark__name">tesseract-ops</span>
+
+  </a>
+  <nav class="topbar__nav">
+    {nav.map(({ href, label }) => (
+      <a href={href} class:list={[isActive(href) && 'is-active']}>{label}</a>
+    ))}
+  </nav>
+  <div class="topbar__meta">
+    <span>v.04 · 2026-05-24</span>
+    <span class="topbar__live">● live</span>
+  </div>
+</header>

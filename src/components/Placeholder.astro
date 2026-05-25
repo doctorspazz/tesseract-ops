@@ -1,0 +1,20 @@
+---
+// src/components/Placeholder.astro
+// Striped placeholder for any image you haven't supplied yet. Use this in
+// your layouts wherever a real <img> will eventually go; ship real photos
+// in posts via the `hero` frontmatter field and the <PostHero> component.
+interface Props {
+  label: string;
+  ratio?: string;
+  /** "diag" uses a 45° crosshatch (good for portraits); default is horizontal scanlines. */
+  variant?: 'lines' | 'diag';
+}
+const { label, ratio = '21 / 9', variant = 'lines' } = Astro.props;
+---
+
+<div
+  class:list={['placeholder', variant === 'diag' && 'placeholder--diag']}
+  style={`aspect-ratio: ${ratio};`}
+>
+  <div class="placeholder__label">{label}</div>
+</div>

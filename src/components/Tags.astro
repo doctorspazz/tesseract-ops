@@ -1,0 +1,26 @@
+---
+// src/components/Tags.astro
+interface Props {
+  tags: string[];
+  /** Render as plain text strip ("#a #b #c") vs the bordered chips. */
+  variant?: 'chip' | 'inline';
+}
+const { tags, variant = 'chip' } = Astro.props;
+---
+
+{variant === 'chip' ? (
+  <ul class="tags" role="list">
+    {tags.map(t => (
+      <li><a href={`/tags/${t}`} class="tag">#{t}</a></li>
+    ))}
+  </ul>
+) : (
+  <span class="tags-inline">
+    {tags.map(t => (<a href={`/tags/${t}`}>#{t}</a>))}
+  </span>
+)}
+
+<style>
+  .tags-inline { display: inline-flex; flex-wrap: wrap; gap: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-70); }
+  .tags-inline a:hover { color: var(--accent); text-decoration: none; }
+</style>

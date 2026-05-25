@@ -1,0 +1,25 @@
+---
+// src/components/Callout.astro
+// Used inside MDX:
+//   <Callout type="warn" title="If your fans are still screaming">
+//     ffmpeg is doing detection in software…
+//   </Callout>
+interface Props {
+  type?: 'warn' | 'note' | 'tip';
+  title: string;
+}
+const { type = 'warn', title } = Astro.props;
+const code = { warn: '0x02', note: '0x01', tip: '0x03' }[type];
+const label = { warn: 'WARN', note: 'NOTE', tip: 'TIP' }[type];
+---
+
+<aside class="callout" data-type={type}>
+  <div class="callout__type">
+    {label}
+    <span class="callout__code">{code}</span>
+  </div>
+  <div>
+    <div class="callout__title">{title}</div>
+    <div class="callout__body"><slot /></div>
+  </div>
+</aside>

@@ -1,0 +1,34 @@
+---
+// src/components/SeriesProgress.astro
+// "In progress" band at the top of the index showing where in a series we are.
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  series: CollectionEntry<'series'>;
+  current: number; // 1-indexed; the latest published part
+}
+const { series, current } = Astro.props;
+const { name, blurb, total } = series.data;
+const dots = Array.from({ length: total });
+---
+
+<section class="series-band">
+  <div class="series-band__label">// SERIES<br/><span>IN PROGRESS</span></div>
+  <div>
+    <div class="series-band__title">
+      {name} <small>· part {current} of {total}</small>
+    </div>
+    <div class="series-band__blurb">{blurb}</div>
+    <div class="series-band__dots">
+      {dots.map((_, i) => {
+        const done = i < current;
+        const isCurr = i === current - 1;
+        return (
+          <div class:list={['series-band__dot', done && 'is-done', isCurr && 'is-current']}></div>
+        );
+      })}
+      <span class="series-band__count">{current} / {total}</span>
+    </div>
+  </div>
+  <a href={`/series/${series.id}`} class="series-band__cta">read series →</a>
+</section>

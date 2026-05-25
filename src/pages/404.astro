@@ -1,0 +1,47 @@
+---
+// src/pages/404.astro — committed Big-number 404.
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Suggest three posts: the two most recent in "Building the lab" + the most
+// recent essay. Adjust freely.
+const all = (await getCollection('posts', ({ data }) => !data.draft))
+  .sort((a, b) => +b.data.date - +a.data.date);
+const series = all.filter(p => p.data.series?.id === 'building-the-lab').slice(0, 2);
+const essay  = all.find(p => p.data.kind === 'essay');
+const suggested = [series[0], essay, series[1]].filter(Boolean) as typeof all;
+---
+
+<BaseLayout title="404 — not found">
+  <section class="notfound-hero">
+    <div>
+      <div class="eyebrow eyebrow--accent">// HTTP / 1.1 · STATUS</div>
+      <div class="notfound-hero__big">404</div>
+    </div>
+    <div>
+      <h1 class="notfound-hero__title">The page you're looking for doesn't exist...</h1>
+      <p class="notfound-hero__copy">
+        Either I've broken something, the page never existed, or something
+        is seriously wrong with my build. Try one of these:
+      </p>
+      <div class="notfound-hero__ctas">
+        <a href="/" class="btn btn--accent">~/posts →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="notfound-grid">
+    <div class="eyebrow notfound-grid__title">// OR READ ONE OF THESE</div>
+    <div class="notfound-grid__cards">
+      {suggested.map(post => (
+        <a href={`/posts/${post.id}`} class="notfound-card">
+          <div class:list={['notfound-card__date', post.data.series && 'is-series']}>
+            {post.data.date.toISOString().slice(0, 10)}
+          </div>
+          <div class="notfound-card__title">{post.data.title}</div>
+          <div class="notfound-card__dek">{post.data.dek.slice(0, 110)}…</div>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

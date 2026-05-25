@@ -1,0 +1,47 @@
+---
+// src/pages/posts/[...slug].astro — article page.
+import { getCollection, getEntry, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostHeader from '../../components/PostHeader.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', ({ data }) => !data.draft);
+  return posts.map(post => ({ params: { slug: post.id }, props: { post } }));
+}
+
+interface Props { post: CollectionEntry<'posts'>; }
+const { post } = Astro.props;
+const series = post.data.series ? await getEntry(post.data.series) : undefined;
+const { Content, headings } = await render(post);
+
+// Only h2s in the TOC — h3s nest below them in the article body but don't
+// clutter the sidebar.
+const toc = headings.filter(h => h.depth === 2);
+---
+
+<BaseLayout title={post.data.title} description={post.data.dek}>
+  <PostHeader post={post} series={series} />
+
+  <div class="article">
+    <aside class="article__toc" aria-label="Contents">
+      <div class="article__toc-title">// CONTENTS</div>
+      <ol>
+        {toc.map(h => (
+          <li><a href={`#${h.slug}`}>{h.text}</a></li>
+        ))}
+      </ol>
+    </aside>
+
+    <article class="article__body">
+      <Content />
+
+      <div class="sign-off">
+        <span class="sign-off__label">// FOOTNOTE</span>
+        <span>
+          Did a miss something? Get something wrong? 
+          <a href="mailto:shaun_seaver@icloud.com">send your thoughts</a> — I publish corrections.
+        </span>
+      </div>
+    </article>
+  </div>
+</BaseLayout>

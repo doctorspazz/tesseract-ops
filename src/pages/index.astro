@@ -1,49 +1,91 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+// src/pages/index.astro — the blog index (committed Directory layout).
+import { getCollection, getEntry } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SeriesProgress from '../components/SeriesProgress.astro';
+import PostRow from '../components/PostRow.astro';
+
+// Pull non-draft posts, newest first.
+const posts = (await getCollection('posts', ({ data }) => !data.draft))
+  .sort((a, b) => +b.data.date - +a.data.date);
+
+// Pre-resolve every referenced series so PostRow doesn't have to.
+const seriesById = new Map<string, Awaited<ReturnType<typeof getEntry>>>();
+for (const p of posts) {
+  if (p.data.series && !seriesById.has(p.data.series.id)) {
+    seriesById.set(p.data.series.id, await getEntry(p.data.series));
+  }
+}
+
+// Counts for the filter strip.
+const counts = posts.reduce(
+  (c, p) => ({ ...c, [p.data.kind]: (c[p.data.kind] || 0) + 1 }),
+  { 'deep-dive': 0, essay: 0, changelog: 0, note: 0 } as Record<string, number>
+);
+
+// Latest part of the "Building the lab" series, for the SeriesProgress band.
+const btl = await getEntry('series', 'building-the-lab');
+const btlLatest = posts
+  .filter(p => p.data.series?.id === 'building-the-lab' && p.data.part)
+  .reduce((max, p) => Math.max(max, p.data.part!), 0);
+
+const latestDate = posts[0]?.data.date.toISOString().slice(0, 10) ?? '';
 ---
 
-<!doctype html>
-<html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This template
-				serves as a lightweight, minimally-styled starting point for anyone looking to build a personal
-				website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to
-				<a href="https://docs.astro.build/">read the docs</a>
-				or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out
-				<a href="https://github.com/Charca/astro-blog-template">astro-blog-template</a>
-				by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
-		</main>
-		<Footer />
-	</body>
-</html>
+<BaseLayout
+  title="Tesseract-Ops"
+  description="Working notes from a small home AI lab in Louisville."
+>
+  <section class="index-intro">
+    <h1 class="index-intro__title">
+      Working notes from a humble home AI lab <span class="index-intro__title-sub">in Louisville</span>
+    </h1>
+    <div class="index-intro__meta">
+      {posts.length} POSTS &nbsp;·&nbsp; 3 SERIES<br />
+      UPDATED {latestDate}
+    </div>
+  </section>
+
+  <div class="index-banner">
+    <span>// INDEX OF ~/POSTS · NEWEST FIRST</span>
+    <span class="index-banner__cmd">$ ls -la --sort=date</span>
+  </div>
+
+  {btl && btlLatest > 0 && (
+    <SeriesProgress series={btl} current={btlLatest} />
+  )}
+
+  <div class="index-filters">
+    <button class="index-filters__btn is-active">
+      all <span class="index-filters__count">({posts.length})</span>
+    </button>
+    <button class="index-filters__btn">
+      deep-dive <span class="index-filters__count">({counts['deep-dive']})</span>
+    </button>
+    <button class="index-filters__btn">
+      essay <span class="index-filters__count">({counts.essay})</span>
+    </button>
+    <button class="index-filters__btn">
+      changelog <span class="index-filters__count">({counts.changelog})</span>
+    </button>
+    <button class="index-filters__btn">
+      note <span class="index-filters__count">({counts.note})</span>
+    </button>
+  </div>
+
+  <div class="index-cols">
+    <span>DATE</span>
+    <span>TITLE</span>
+    <span>TAGS</span>
+  </div>
+
+  <ul class="post-list">
+    {posts.map((post, i) => (
+      <PostRow
+        post={post}
+        series={post.data.series ? seriesById.get(post.data.series.id) : undefined}
+        current={i === 0}
+      />
+    ))}
+  </ul>
+</BaseLayout>
